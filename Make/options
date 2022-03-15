@@ -4,7 +4,6 @@ EXE_INC = \
     -I$(LIB_SRC)/TurbulenceModels/incompressible/lnInclude \
     -I$(LIB_SRC)/transportModels \
     -I$(LIB_SRC)/transportModels/incompressible/singlePhaseTransportModel \
-    -I$(WM_PROJECT_USER_DIR)/src/transportModels/immiscibleIncompressibleSmoothedTwoPhaseMixture/lnInclude \
     -I$(WM_PROJECT_USER_DIR)/src/transportModels/smoothedInterfaceProperties/lnInclude \
     -I$(LIB_SRC)/transportModels/twoPhaseMixture/lnInclude \
     -I$(LIB_SRC)/transportModels/incompressible/lnInclude \
@@ -17,7 +16,7 @@ EXE_LIBS = \
     -lphaseChangeTwoPhaseMixturesPB \
     -ltwoPhaseMixture \
     -ltwoPhaseProperties \
-    -limmiscibleIncompressibleSmoothedTwoPhaseMixturePB \
+    -lsmoothedInterfacePropertiesPB \
     -lincompressibleTransportModels \
 	-lincompressibleTurbulenceModels \
     -lfiniteVolume \
