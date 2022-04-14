@@ -37,19 +37,20 @@ volScalarField T
     ),
     mesh
 );
-    Info << "Reading field U\n" << endl;
-    volVectorField U
+
+Info << "Reading field U\n" << endl;
+volVectorField U
+(
+    IOobject
     (
-        IOobject
-        (
-            "U",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh
-    );
+        "U",
+        runTime.timeName(),
+        mesh,
+        IOobject::MUST_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh
+);
 
 
 #   include "createPhi.H"
@@ -81,4 +82,32 @@ volVectorField gradAlphal
     ),
     mesh,
     dimensionedVector("grad0", dimless/dimLength, vector(0,0,0))
+);
+
+volScalarField analyticalTemperature
+(
+    IOobject
+    (
+        "analyticalTemperature",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    TSat
+);
+
+volScalarField x
+(
+    IOobject
+    (
+        "analyticalTemperature",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("x0", dimLength, 0)
 );

@@ -73,7 +73,8 @@ scalar derivFunc(scalar x)
 	  + x*(2*x*Foam::exp(pow(x,2))*Foam::erf(x) + Foam::exp(pow(x,2))*derivErf(x) ); 
 }
 
-dimensionedScalar deltaInter
+// Interface position
+dimensionedScalar X
        (
 	       const scalar eps, 
 		   const dimensionedScalar thermCond, 
@@ -139,6 +140,7 @@ int main(int argc, char *argv[])
 	OFstream IFfile("IFposition.txt");
 	IFfile << "Time [s]\t" << "Numerical [m]\t" << "Analytical [m]\t" << "Error [%]" << endl;
 
+
     forAll(timeDirs, timeI)
     {
         runTime.setTime(timeDirs[timeI], timeI);
@@ -170,14 +172,16 @@ int main(int argc, char *argv[])
 
 		if (phaseChangeType == "evaporation")
 		{
+			dimensionedScalar analyticalInterfacePosition= X(epsilon,k2, rho2, cp2, runTime.value());
+
 			Info<<"Interface position for time " 
 				<< runTime.timeName() 
 				<< " is equal to: " 
 				<< interfacePosition.value() 
 				<< " [m]"
 				<< " (error: "
-				<< mag(interfacePosition.value() - deltaInter(epsilon,k2, rho2, cp2, runTime.value()).value())/
-						mag(deltaInter(epsilon, k2, rho2, cp2, runTime.value()).value() + VSMALL)*100
+				<< mag(interfacePosition.value() - analyticalInterfacePosition.value())/
+						mag(analyticalInterfacePosition.value() + VSMALL)*100
 				<< "%)"
 				<< endl;
 
@@ -187,10 +191,10 @@ int main(int argc, char *argv[])
 	  		     << "\t" 
 	  			 << interfacePosition.value() 
 	  		     << "\t" 
-	  			 << deltaInter(epsilon, k2, rho2, cp2, runTime.value()).value() 
+	  			 << analyticalInterfacePosition.value() 
 	  		     << "\t" 
-				 << mag(interfacePosition.value() - deltaInter(epsilon,k2, rho2, cp2, runTime.value()).value())/
-						mag(deltaInter(epsilon, k2, rho2, cp2, runTime.value()).value() + VSMALL)*100
+				 << mag(interfacePosition.value() - analyticalInterfacePosition.value())/
+						mag(analyticalInterfacePosition.value() + VSMALL)*100
 	  			 << endl;
 		}
 		else
@@ -201,8 +205,8 @@ int main(int argc, char *argv[])
 				<< interfacePosition.value() 
 				<< " [m]"
 				<< " (error: "
-				<< mag(interfacePosition.value() - deltaInter(epsilon, k1, rho1, cp1, runTime.value()).value())/
-						mag(deltaInter(epsilon, k1, rho1, cp1, runTime.value()).value() + VSMALL)*100
+				<< mag(interfacePosition.value() - X(epsilon, k1, rho1, cp1, runTime.value()).value())/
+						mag(X(epsilon, k1, rho1, cp1, runTime.value()).value() + VSMALL)*100
 				<< "%)"
 				<< endl;
 
@@ -212,13 +216,111 @@ int main(int argc, char *argv[])
 	  		     << "\t" 
 	  			 << interfacePosition.value() 
 	  		     << "\t" 
-	  			 << deltaInter(epsilon, k1, rho1, cp1, runTime.value()).value() 
+	  			 << X(epsilon, k1, rho1, cp1, runTime.value()).value() 
 	  		     << "\t" 
-				 << mag(interfacePosition.value() - deltaInter(epsilon, k1, rho1, cp1, runTime.value()).value())/
-						mag(deltaInter(epsilon, k1, rho1, cp1, runTime.value()).value() + VSMALL)*100
+				 << mag(interfacePosition.value() - X(epsilon, k1, rho1, cp1, runTime.value()).value())/
+						mag(X(epsilon, k1, rho1, cp1, runTime.value()).value() + VSMALL)*100
 	  			 << endl;
 		}
+
     }
+
+	OFstream Tfile("T.txt");
+	Tfile << "Time [s]\t"  << "x [m]\t" << "Numerical [m]\t" << "Analytical [m]\t" << "Error [%]" << endl;
+
+	if (phaseChangeType == "evaporation")
+	{
+		volScalarField Tnum
+		(
+		    IOobject
+		    (
+		        "T",
+		        runTime.timeName(),
+		        mesh,
+		        IOobject::MUST_READ,
+		        IOobject::NO_WRITE
+		    ),
+		    mesh
+		);
+
+		dimensionedScalar tau = runTime.value();
+		dimensionedScalar avTau = k2/rho2/cp2*tau;
+		dimensionedScalar analyticalInterfacePosition= X(epsilon,k2, rho2, cp2, runTime.value());
+		
+	   	Info<< "\nSaving the results for temperature to T.txt\n" << endl;
+		forAll(analyticalTemperature, celli)
+		{
+			x[celli] = analyticalTemperature.mesh().C()[celli].component(vector::X);
+			if (x[celli] > analyticalInterfacePosition.value())
+			{
+				analyticalTemperature[celli] = TSat.value();
+			}
+			else
+			{
+				analyticalTemperature[celli] = Tw.value() + (TSat.value() - Tw.value())
+					/Foam::erf(epsilon)*Foam::erf(x[celli]/2.0/Foam::sqrt(avTau.value())); 
+			}
+	
+			Tfile << runTime.timeName() 
+	  		     << "\t" 
+	  			 << x[celli] 
+	  		     << "\t" 
+	  			 << Tnum[celli] 
+	  		     << "\t" 
+	  			 << analyticalTemperature[celli]
+	  		     << "\t" 
+				 << mag(Tnum[celli] - analyticalTemperature[celli])/
+				 		analyticalTemperature[celli]*100
+	  			 << endl;
+		}
+	}
+
+	if (phaseChangeType == "condensation")
+	{
+		volScalarField Tnum
+		(
+		    IOobject
+		    (
+		        "T",
+		        runTime.timeName(),
+		        mesh,
+		        IOobject::MUST_READ,
+		        IOobject::NO_WRITE
+		    ),
+		    mesh
+		);
+
+		dimensionedScalar tau = runTime.value();
+		dimensionedScalar alTau = k1/rho1/cp1*tau;
+		dimensionedScalar analyticalInterfacePosition= X(epsilon,k1, rho1, cp1, runTime.value());
+		
+	   	Info<< "\nSaving the results for temperature to T.txt\n" << endl;
+		forAll(analyticalTemperature, celli)
+		{
+			x[celli] = analyticalTemperature.mesh().C()[celli].component(vector::X);
+			if (x[celli] > analyticalInterfacePosition.value())
+			{
+				analyticalTemperature[celli] = TSat.value();
+			}
+			else
+			{
+				analyticalTemperature[celli] = Tw.value() + (Tw.value() - TSat.value())
+					/Foam::erf(epsilon)*Foam::erf(x[celli]/2.0/Foam::sqrt(alTau.value())); 
+			}
+	
+			Tfile << runTime.timeName() 
+	  		     << "\t" 
+	  			 << x[celli] 
+	  		     << "\t" 
+	  			 << Tnum[celli] 
+	  		     << "\t" 
+	  			 << analyticalTemperature[celli]
+	  		     << "\t" 
+				 << mag(Tnum[celli] - analyticalTemperature[celli])/
+				 		analyticalTemperature[celli]*100
+	  			 << endl;
+		}
+	}
 
     Info<< "End" << endl;
 
