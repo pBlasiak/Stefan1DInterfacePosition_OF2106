@@ -196,6 +196,27 @@ int main(int argc, char *argv[])
 				 << mag(interfacePosition.value() - analyticalInterfacePosition.value())/
 						mag(analyticalInterfacePosition.value() + VSMALL)*100
 	  			 << endl;
+
+			scalar ttt[10] = {};
+			int i = 0;
+			forAll(alphal, celli)
+			{
+				 if (alphal[celli] < 0.6 && alphal[celli] > 0.4)
+				 {
+					 Info<< "OOOOOOOOOOO" << endl;
+				     ttt[i] = alphal.mesh().C()[celli].component(vector::X);
+					 i++;
+				 }
+			}
+
+			Info<<"Interface positionsNEW for time " 
+				<< runTime.timeName() 
+				<< " is equal to: " ;
+				for (int i =0; i<10; i++)
+				{
+					 std::cout << ttt[i] << ",\n";
+				}
+				Info<< endl;
 		}
 		else
 		{
