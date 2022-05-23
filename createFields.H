@@ -24,6 +24,21 @@ volScalarField p
     p_rgh
 );
 
+volScalarField rho
+(
+    IOobject
+    (
+        "rho",
+        runTime.timeName(),
+        mesh,
+        IOobject::READ_IF_PRESENT
+    ),
+    mesh,
+	dimensionedScalar("rho0", dimDensity, 0.0)
+    //alpha1*rho1 + alpha2*rho2
+);
+rho.oldTime();
+
 Info<< "Reading field T\n" << endl;
 volScalarField T
 (
@@ -52,6 +67,36 @@ volVectorField U
     mesh
 );
 
+Info<< "Creating field k\n" << endl;
+volScalarField k
+(
+    IOobject
+    (
+        "k",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+	mesh,
+    dimensionedScalar("k00", dimPower/dimLength/dimTemperature, 0)
+);
+// Need to store for turbulentHeatFluxTemperature BC
+Info<< "Creating field cp\n" << endl;
+volScalarField cp
+(
+    IOobject
+    (
+        "cp",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+	mesh,
+    dimensionedScalar("cp00", dimensionSet(0,2,-2,-1,0,0,0), 0)
+);
+//cp = mixture->cp();
 
 #   include "createPhi.H"
 
