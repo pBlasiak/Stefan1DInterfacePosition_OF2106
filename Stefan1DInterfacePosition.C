@@ -225,7 +225,9 @@ int main(int argc, char *argv[])
 
     }
 
-	OFstream Tfile("T.txt");
+	word TfileName = "T_" + name(runTime.value()) + "s.txt";
+
+	OFstream Tfile(TfileName);
 	Tfile << "Time [s]\t"  << "x [m]\t" << "Numerical [m]\t" << "Analytical [m]\t" << "Error [%]" << endl;
 
 	if (phaseChangeType == "evaporation")
@@ -247,7 +249,7 @@ int main(int argc, char *argv[])
 		dimensionedScalar avTau = k2/rho2/cp2*tau;
 		dimensionedScalar analyticalInterfacePosition= X(epsilon,k2, rho2, cp2, runTime.value());
 		
-	   	Info<< "\nSaving the results for temperature to T.txt\n" << endl;
+	   	Info<< "\nSaving the results for temperature at time " << name(runTime.value()) << " s to T_" << name(runTime.value()) << "s.txt\n" << endl;
 		forAll(analyticalTemperature, celli)
 		{
 			x[celli] = analyticalTemperature.mesh().C()[celli].component(vector::X);
@@ -294,7 +296,7 @@ int main(int argc, char *argv[])
 		dimensionedScalar alTau = k1/rho1/cp1*tau;
 		dimensionedScalar analyticalInterfacePosition= X(epsilon,k1, rho1, cp1, runTime.value());
 		
-	   	Info<< "\nSaving the results for temperature to T.txt\n" << endl;
+	   	Info<< "\nSaving the results for temperature at time " << name(runTime.value()) << " s to T_" << name(runTime.value()) << "s.txt\n" << endl;
 		forAll(analyticalTemperature, celli)
 		{
 			x[celli] = analyticalTemperature.mesh().C()[celli].component(vector::X);
