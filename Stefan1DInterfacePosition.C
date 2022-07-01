@@ -5,19 +5,7 @@
     \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
-2010-08-02 Eelco van Vliet: 1st public version of Stefan1DInterfacePosition:
-  http://www.cfd-online.com/Forums/openfoam-solving/66705-wallheatflux-bc-not-constant-after-restart.html#post269812
 
-2012-05-21 Eelco van Vliet:
-  Quoting: http://www.cfd-online.com/Forums/openfoam-post-processing/101972-wallheatflux-utility-incompressible-case.html#post362191
-  «modified the standard wallHeatflux utility which comes default with OF into
-  a version for incompressible flows. Also removed a bug out of the code.»
-
-2012-06-26 Eelco van Vliet:
-  Quoting: http://www.cfd-online.com/Forums/openfoam-post-processing/101972-wallheatflux-utility-incompressible-case.html#post368330
-  «p is now not required anymore.»
-
-2014-06-22: Bruno Santos: Adapted to OpenFOAM 2.2.x.
 
 -------------------------------------------------------------------------------
 License
@@ -91,10 +79,10 @@ int main(int argc, char *argv[])
 
     timeSelector::addOptions();
     #include "setRootCase.H"
-#   include "createTime.H"
+	#include "createTime.H"
     instantList timeDirs = timeSelector::select0(runTime, args);
-#   include "createMesh.H"
-#       include "createFields.H"
+	#include "createMesh.H"
+	#include "createFields.H"
 	#include "readTransportProperties.H"
 
 	const label maxIterNr = 20000;
@@ -134,12 +122,21 @@ int main(int argc, char *argv[])
 		iter++;
 	} while ( mag(epsilon - epsilonPrev) > tol && iter < maxIterNr );
 
-    Info<< "Liczba iteracji: " << iter << endl;
-	Info<< "epsilon = " << epsilon << endl;
+    Info<< "Number of iterations: " << iter    << endl;
+	Info<< "epsilon = "             << epsilon << endl;
 
+	// File for interface position
 	OFstream IFfile("IFposition.txt");
 	IFfile << "Time [s]\t" << "Numerical [m]\t" << "Analytical [m]\t" << "Error [%]" << endl;
 
+	// File for velocity of the interface
+	OFstream Ufile("IFvelocity.txt");
+	Ufile << "Time [s]\t" << "Numerical [m]\t" << "Analytical [m]\t" << "Error [%]" << endl;
+
+	// thermal diffusivity of vapor
+    const dimensionedScalar D(k2/rho2/cp2);
+
+	dimensionedScalar Uanal("Uanal", dimVelocity, 0.0);
 
     forAll(timeDirs, timeI)
     {
@@ -165,10 +162,24 @@ int main(int argc, char *argv[])
 
         Info<< endl;
 
+		// Numerical value of interface position
         dimensionedScalar interfacePosition("interfacePosition", dimLength, 0.0);
-   
 	    interfacePosition = sum(mag(gradAlphal)*mesh.C().component(0))/sum(mag(gradAlphal));
-
+		
+		// Numerical value of interface velocity
+		dimensionedScalar Unum("Unum", dimVelocity, 0.0);
+		volVectorField cellsCenters(U.mesh().C());
+		forAll(U, celli)
+		{
+			if
+			(
+				interfacePosition.value() >= cellsCenters[celli][0] 
+			 && interfacePosition.value() <  cellsCenters[celli + 1][0]
+			)
+			{
+				Unum.value() = U[celli][0];
+			} 
+		}
 
 		if (phaseChangeType == "evaporation")
 		{
@@ -196,7 +207,24 @@ int main(int argc, char *argv[])
 				 << mag(interfacePosition.value() - analyticalInterfacePosition.value())/
 						mag(analyticalInterfacePosition.value() + VSMALL)*100
 	  			 << endl;
+
+			Uanal = (1.0 - rho2/rho1)*epsilon*Foam::sqrt(D/runTime);
+
+	    	Info<< "\nSaving the results for interface velocity to IFvelocity.txt\n" << endl;
+
+			Ufile << runTime.timeName() 
+	  		     << "\t" 
+	  			 << Unum.value() 
+	  		     << "\t" 
+	  			 << Uanal.value() 
+	  		     << "\t" 
+				 << mag(Unum.value() - Uanal.value())/
+						mag(Uanal.value() + VSMALL)*100
+	  			 << endl;
+
+			Info<< endl;
 		}
+		// ADD CALCULATIONS OF U FOR CONDENSATION!!!!!!!!!!!
 		else
 		{
 			Info<<"Interface position for time " 
@@ -225,6 +253,8 @@ int main(int argc, char *argv[])
 
     }
 
+
+	// Saves temperature distribution for the latest time
 	word TfileName = "T_" + name(runTime.value()) + "s.txt";
 
 	OFstream Tfile(TfileName);
