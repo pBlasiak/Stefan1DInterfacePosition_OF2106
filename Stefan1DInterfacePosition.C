@@ -208,19 +208,34 @@ int main(int argc, char *argv[])
 						mag(analyticalInterfacePosition.value() + VSMALL)*100
 	  			 << endl;
 
-			Uanal = (1.0 - rho2/rho1)*epsilon*Foam::sqrt(D/runTime);
+			if (runTime.value() == 0)
+			{
+				Ufile << runTime.timeName() 
+	  			     << "\t" 
+	  				 << Unum.value() 
+	  			     << "\t" 
+	  				 << 0 
+	  			     << "\t" 
+					 << mag(Unum.value() - Uanal.value())/
+							mag(Uanal.value() + VSMALL)*100
+	  				 << endl;
+			}
+			else
+			{
+				Uanal = (1.0 - rho2/rho1)*epsilon*Foam::sqrt(D/runTime);
 
-	    	Info<< "\nSaving the results for interface velocity to IFvelocity.txt\n" << endl;
+	    		Info<< "\nSaving the results for interface velocity to IFvelocity.txt\n" << endl;
 
-			Ufile << runTime.timeName() 
-	  		     << "\t" 
-	  			 << Unum.value() 
-	  		     << "\t" 
-	  			 << Uanal.value() 
-	  		     << "\t" 
-				 << mag(Unum.value() - Uanal.value())/
-						mag(Uanal.value() + VSMALL)*100
-	  			 << endl;
+				Ufile << runTime.timeName() 
+	  			     << "\t" 
+	  				 << Unum.value() 
+	  			     << "\t" 
+	  				 << Uanal.value() 
+	  			     << "\t" 
+					 << mag(Unum.value() - Uanal.value())/
+							mag(Uanal.value() + VSMALL)*100
+	  				 << endl;
+			}
 
 			Info<< endl;
 		}
