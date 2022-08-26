@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 
 		// Numerical value of interface position
         dimensionedScalar interfacePosition("interfacePosition", dimLength, 0.0);
-	    interfacePosition = sum(mag(gradAlphal)*mesh.C().component(0))/sum(mag(gradAlphal));
+	    interfacePosition = sum(mag(gradAlphal)*mesh.C().component(0))/max(sum(mag(gradAlphal)), dimensionedScalar("0gradAlpha", dimless/dimLength, SMALL));
 		
 		// Numerical value of interface velocity
 		dimensionedScalar Unum("Unum", dimVelocity, 0.0);
