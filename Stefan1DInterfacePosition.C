@@ -160,6 +160,20 @@ int main(int argc, char *argv[])
 
         gradAlphal=fvc::grad(alphal);
 
+		Info<< "Updating field U." << endl;
+		volVectorField Uref
+		(
+		    IOobject
+		    (
+		        "U",
+		        runTime.timeName(),
+		        mesh,
+		        IOobject::MUST_READ,
+		        IOobject::NO_WRITE
+		    ),
+		    mesh
+		);
+
         Info<< endl;
 
 		// Numerical value of interface position
@@ -169,7 +183,7 @@ int main(int argc, char *argv[])
 		// Numerical value of interface velocity
 		dimensionedScalar Unum("Unum", dimVelocity, 0.0);
 		volVectorField cellsCenters(U.mesh().C());
-		forAll(U, celli)
+		forAll(Uref, celli)
 		{
 			if
 			(
@@ -177,7 +191,7 @@ int main(int argc, char *argv[])
 			 && interfacePosition.value() <  cellsCenters[celli + 1][0]
 			)
 			{
-				Unum.value() = U[celli][0];
+				Unum.value() = Uref[celli][0];
 			} 
 		}
 
