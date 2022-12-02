@@ -76,6 +76,16 @@ dimensionedScalar X
 
 int main(int argc, char *argv[])
 {
+    argList::addNote
+    (
+		"Calculates and writes the position of the interface for one dimensional"
+		" Stefan problem."
+		" It is assumed that the interface moves in the x direction."
+    );
+
+    argList::addOption("dict", "file", "Alternative setFieldsDict");
+
+    #include "addRegionOption.H"
 
     timeSelector::addOptions();
     #include "setRootCase.H"
