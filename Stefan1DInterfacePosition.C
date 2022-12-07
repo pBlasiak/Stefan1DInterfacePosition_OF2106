@@ -201,6 +201,9 @@ int main(int argc, char *argv[])
 			 && interfacePosition.value() <  cellsCenters[celli + 1][0]
 			)
 			{
+				// ten sposob nie dziala zbyt dobrze bo brana jest predkosc przed interfejsem
+				// ktora jest nizsza niz za nim
+				// w ten sposob wyniki sa zanizone
 				Unum.value() = Uref[celli][0];
 			} 
 		}
