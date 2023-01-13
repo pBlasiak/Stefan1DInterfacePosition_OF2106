@@ -9,6 +9,6 @@ set -x
 ./Allwclean
 
 #wmake $targetType simplifiedSuperFluidModels
-wmake
+wmake -with-bear
 
 #------------------------------------------------------------------------------
